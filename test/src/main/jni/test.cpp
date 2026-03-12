@@ -1,11 +1,12 @@
 #include <jni.h>
 #include <dobby.h>
+#include <dlfcn.h>
 #include <sys/mman.h>
+#include <string>
 #include <string_view>
 #include "logging.h"
 
 import lsplant;
-import lsparself;
 
 #define _uintval(p)               reinterpret_cast<uintptr_t>(p)
 #define _ptr(p)                   reinterpret_cast<void *>(p)
@@ -19,6 +20,7 @@ import lsparself;
                                               PROT_READ | PROT_WRITE | PROT_EXEC)
 
 bool init_result;
+void* art_handle = nullptr;
 
 void* InlineHooker(void* target, void* hooker) {
     _make_rwx(target, _page_size);
@@ -58,15 +60,16 @@ JNI_OnLoad(JavaVM* vm, void* reserved) {
     if (vm->GetEnv((void**) &env, JNI_VERSION_1_6) != JNI_OK) {
         return JNI_ERR;
     }
-    lsparself::Elf art("/libart.so");
+    art_handle = dlopen("libart.so", RTLD_NOW);
+    if (!art_handle) {
+        LOGE("dlopen libart.so failed");
+        return JNI_VERSION_1_6;
+    }
     lsplant::InitInfo initInfo{
             .inline_hooker = InlineHooker,
             .inline_unhooker = InlineUnhooker,
-            .art_symbol_resolver = [&art](std::string_view symbol) -> void* {
-                return art.getSymbAddress(symbol);
-            },
-            .art_symbol_prefix_resolver = [&art](auto symbol) {
-                return art.getSymbPrefixFirstAddress(symbol);
+            .art_symbol_resolver = [](std::string_view symbol) -> void* {
+                return dlsym(art_handle, std::string(symbol).c_str());
             },
     };
     init_result = lsplant::Init(env, initInfo);
