@@ -28,6 +28,7 @@ unzip -p "$APK_PATH" AndroidManifest.xml > "$PKG_DIR/AndroidManifest.xml"
 
 while IFS= read -r so_path; do
   abi="$(basename "$(dirname "$so_path")")"
+  abi="${abi#android.}"
   mkdir -p "$PKG_DIR/lib/$abi"
   cp "$so_path" "$PKG_DIR/lib/$abi/liblsplant.so"
 done < <(find "$ROOT_DIR/lsplant/build" -type f -path '*standalone*' -name 'liblsplant.so' | sort -u)
