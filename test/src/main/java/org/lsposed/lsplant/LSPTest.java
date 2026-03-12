@@ -3,7 +3,7 @@ package org.lsposed.lsplant;
 public class LSPTest {
 
     static {
-        System.loadLibrary("test");
+        System.loadLibrary("lsplant");
     }
 
     boolean field;

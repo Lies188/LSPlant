@@ -103,6 +103,7 @@ cmaker {
 }
 
 dependencies {
+    implementation(libs.dobby)
     "standaloneCompileOnly"(libs.cxx)
 }
 

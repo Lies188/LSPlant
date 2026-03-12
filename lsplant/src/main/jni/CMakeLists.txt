@@ -15,7 +15,7 @@ if (LSPLANT_STANDALONE)
     link_libraries(cxx::cxx)
 endif()
 
-set(SOURCES lsplant.cc)
+set(SOURCES lsplant.cc jni_bridge.cc)
 file(GLOB_RECURSE MODULE_SOURCES CONFIGURE_DEPENDS "*.cxx")
 file(GLOB_RECURSE MODULE_INTERFACES CONFIGURE_DEPENDS "*.ixx")
 list(FILTER MODULE_SOURCES EXCLUDE REGEX "${PROJECT_SOURCE_DIR}.external.+")
@@ -23,6 +23,7 @@ list(FILTER MODULE_INTERFACES EXCLUDE REGEX "${PROJECT_SOURCE_DIR}.external.+")
 
 set(DEX_BUILDER_BUILD_SHARED OFF CACHE INTERNAL "" FORCE)
 add_subdirectory(external/dex_builder)
+find_package(dobby REQUIRED CONFIG)
 
 option(LSPLANT_BUILD_SHARED "If ON, lsplant will also build shared library" ON)
 
@@ -43,7 +44,7 @@ if (LSPLANT_BUILD_SHARED)
             COMMAND ${CMAKE_STRIP} --strip-all $<TARGET_FILE:${PROJECT_NAME}>)
 
     target_link_libraries(${PROJECT_NAME} PRIVATE dex_builder_static)
-    target_link_libraries(${PROJECT_NAME} PUBLIC log)
+    target_link_libraries(${PROJECT_NAME} PUBLIC log dl dobby::dobby)
 endif()
 
 add_library(${PROJECT_NAME}_static STATIC ${SOURCES})
@@ -58,4 +59,4 @@ if (NOT DEFINED DEBUG_SYMBOLS_PATH)
 endif()
 
 target_link_libraries(${PROJECT_NAME}_static PRIVATE dex_builder_static)
-target_link_libraries(${PROJECT_NAME}_static PUBLIC log)
+target_link_libraries(${PROJECT_NAME}_static PUBLIC log dl dobby::dobby)
